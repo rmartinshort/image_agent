@@ -13,7 +13,7 @@ def main():
     loaded_image = Image.open(loaded_image_path)
 
     query = (
-        "Describe the weather and then find the white dog. What is the white dog doing?"
+        "What are the dogs in this image doing? If a brown dog is present, locate it"
     )
 
     agent = Agent(openai_api_key=secrets["OPENAI_API_KEY"])

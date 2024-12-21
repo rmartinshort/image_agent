@@ -27,7 +27,7 @@ def get_device_type():
             return "cpu"
 
 
-class VisionSpecificCaller:
+class FlorenceCaller:
     MODEL_PATH = florence_path
     TASK_DICT = {
         "general object detection": "<OD>",

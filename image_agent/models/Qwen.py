@@ -2,7 +2,7 @@ from mlx_vlm import load, apply_chat_template, generate
 from image_agent.models.config import qwen_path
 
 
-class VisionGeneralistCaller:
+class QwenCaller:
     MODEL_PATH = qwen_path
 
     def __init__(self, max_tokens=1000, temperature=0):
