@@ -1,12 +1,14 @@
 from image_agent.models.OpenAIText import OpenAICaller, StructuredOpenAICaller
 from image_agent.models.Qwen import QwenCaller
 from image_agent.models.Florence import FlorenceCaller
+from image_agent.models.OpenAIVision import OpenAIVisionCaller
 from image_agent.agent.AgentNodes import AgentNodes
 from image_agent.agent.AgentEdges import AgentEdges
 from image_agent.agent.AgentState import AgentState
 from image_agent.prompts.PlanStructure import Plan, PlanStructurePrompt
 from image_agent.prompts.PlanConstruction import PlanConstructionPrompt
 from image_agent.prompts.ResultEvaluation import ResultAssessment, ResultEvalutionPrompt
+from image_agent.prompts.ImageInterpretation import ImageInterpretationPrompt
 from image_agent.agent.config import dummy_agent_config
 from langgraph.graph import StateGraph, END
 from langgraph.store.memory import InMemoryStore
@@ -25,7 +27,7 @@ class Agent:
         agent (StateGraph): The compiled agent graph.
     """
 
-    def __init__(self, openai_api_key: str):
+    def __init__(self, openai_api_key: str, vision_mode="local"):
         """
         Initializes the Agent with the provided OpenAI API key.
 
@@ -33,6 +35,7 @@ class Agent:
             openai_api_key (str): The API key for OpenAI.
         """
         self.openai_api_key: str = openai_api_key
+        self.vision_mode = vision_mode
         self.agent_graph: StateGraph = self._set_up_graph()
         self.store: InMemoryStore = InMemoryStore()
         self.agent = self.agent_graph.compile(store=self.store)
@@ -56,7 +59,15 @@ class Agent:
             system_prompt=ResultEvalutionPrompt,
             output_model=ResultAssessment,
         )
-        self.general_vision: QwenCaller = QwenCaller()
+        if self.vision_mode == "local":
+            self.general_vision: QwenCaller = QwenCaller()
+        elif self.vision_mode == "gpt":
+            self.general_vision: OpenAIVisionCaller = OpenAIVisionCaller(
+                api_key=self.openai_api_key, system_prompt=ImageInterpretationPrompt
+            )
+        else:
+            raise ValueError("Vision mode must be local or gpt")
+
         self.specialist_vision: FlorenceCaller = FlorenceCaller()
 
     def _set_up_graph(self) -> StateGraph:
@@ -83,8 +94,8 @@ class Agent:
         agent.add_node("planning", nodes.plan_node)
         agent.add_node("structure_plan", nodes.structure_plan_node)
         agent.add_node("routing", nodes.routing_node)
-        agent.add_node("florence", nodes.call_florence_node)
-        agent.add_node("qwen", nodes.call_qwen_node)
+        agent.add_node("special_vision", nodes.call_special_vision_node)
+        agent.add_node("general_vision", nodes.call_general_vision_node)
         agent.add_node("assessment", nodes.assessment_node)
         agent.add_node("response", nodes.dump_result_node)
 
@@ -95,10 +106,14 @@ class Agent:
         agent.add_conditional_edges(
             "routing",
             edges.choose_model,
-            {"Florence2": "florence", "Qwen2": "qwen", "finalize": "assessment"},
+            {
+                "special_vision": "special_vision",
+                "general_vision": "general_vision",
+                "finalize": "assessment",
+            },
         )
-        agent.add_edge("florence", "routing")
-        agent.add_edge("qwen", "routing")
+        agent.add_edge("special_vision", "routing")
+        agent.add_edge("general_vision", "routing")
         agent.add_conditional_edges(
             "assessment",
             edges.back_to_plan,
@@ -130,7 +145,13 @@ class Agent:
                     print(stage[k1][k2])
         print("#" * 20)
 
-    def invoke(self, query: str, image: Any, config: dict = dummy_agent_config, max_planning_steps: int = 2) -> list:
+    def invoke(
+        self,
+        query: str,
+        image: Any,
+        config: dict = dummy_agent_config,
+        max_planning_steps: int = 2,
+    ) -> list:
         """
         Invokes the agent with a query and an image, returning the results.
 

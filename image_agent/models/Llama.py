@@ -5,6 +5,7 @@ from langchain_community.chat_models.mlx import ChatMLX
 from image_agent.models.config import llama_path
 from typing import Any
 
+
 class LlamaCaller:
     """
     A class to interact with the Llama model for generating responses based on a system prompt.
@@ -21,7 +22,9 @@ class LlamaCaller:
 
     MODEL_PATH = llama_path
 
-    def __init__(self, system_prompt: Any, temperature: float = 0, max_tokens: int = 1000) -> None:
+    def __init__(
+        self, system_prompt: Any, temperature: float = 0, max_tokens: int = 1000
+    ) -> None:
         """
         Initializes the LlamaCaller with the specified system prompt, temperature, and max tokens.
 
@@ -83,7 +86,13 @@ class StructuredLlamaCaller(LlamaCaller):
         output_model (Any): The output model for structured responses.
     """
 
-    def __init__(self, system_prompt: Any, output_model: Any, temperature: float = 0, max_tokens: int = 1000) -> None:
+    def __init__(
+        self,
+        system_prompt: Any,
+        output_model: Any,
+        temperature: float = 0,
+        max_tokens: int = 1000,
+    ) -> None:
         """
         Initializes the StructuredLlamaCaller with the specified system prompt, output model, temperature, and max tokens.
 

@@ -1,5 +1,6 @@
 from mlx_vlm import load, apply_chat_template, generate
 from image_agent.models.config import qwen_path
+from image_agent.prompts.ImageInterpretation import ImageInterpretationPrompt
 
 
 class QwenCaller:
@@ -15,11 +16,7 @@ class QwenCaller:
         messages = [
             {
                 "role": "system",
-                "content": """
-            You are a helpful assistant who answers open-ended questions about images.
-            Keep your responses relevant and concise, fewer than 50 words.
-            You will recieve a prompt in english and you MUST also respond in english.
-            """,
+                "content": ImageInterpretationPrompt.system_template,
             },
             {"role": "user", "content": query},
         ]

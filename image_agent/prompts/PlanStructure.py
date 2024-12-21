@@ -7,7 +7,7 @@ class PlanComponent(BaseModel):
     """Information about one stage of the plan"""
 
     tool_name: str = Field(
-        description="The name of the tool to be called. Must be either Florence2 or Qwen2"
+        description="The name of the tool to be called. Must be either special_vision or general_vision"
     )
     tool_mode: str = Field(
         description="The mode inwhich to call the tool. Must be chosen from the list given in the prompt"
@@ -31,8 +31,8 @@ class PlanStructurePrompt:
     3. A string input, if necessary
 
     The tool name be chosen from the following:
-    - Florence2
-    - Qwen2
+    - special_vision (for finding bounding boxes, doing OCR other specialist vision tasks where numerical outputs are needed)
+    - general_vision (for answering general image questions where text rather than numerical outputs are not needed)
 
     The tool mode must be chosen from the following:
     "general object detection".
@@ -44,20 +44,20 @@ class PlanStructurePrompt:
     "OCR".
     - OCR, call when we want to extract text
     "conversation".
-    - General conversaton, call when we are asked a more complex question about the image 
+    - General conversation, call when we are asked a more complex question about the image 
     Please choose ONLY from the list above when selecting tool mode. Return the exact names of the tool modes you chose
 
     Please study the following rules before crafting your response:
 
-    If tool name = Florence2 and tool mode = 'specific object detection', then tool_input must be provided 
-    If tool name = Qwen2 then tool model must be 'conversation' and tool_input must be provided
+    If tool name = special_vision and tool mode = 'specific object detection', then tool_input must be provided 
+    If tool name = general_vision then tool model must be 'conversation' and tool_input must be provided
 
     Here is an example:
 
-    Input: "call florence to detect all objects. Then call florence in specific mode with input "cats". Then call qwen to describe the image"
+    Input: "call specialist vision to detect all objects. Then call specialist vision in specific mode with input "cats". Then call generalist vision to describe the image"
     You would choose three tools:
-    1. Florence2 in 'general object detection' mode with tool_input = None
-    2. Florence2 in 'specific object detection' with tool_input = "cat"
-    3. Qwen2 in 'conversation' with tool_input = "describe this image"
+    1. special_vision in 'general object detection' mode with tool_input = None
+    2. special_vision in 'specific object detection' with tool_input = "cat"
+    3. general_vision in 'conversation' with tool_input = "describe this image"
     Note that you have used exact names from the lists of options above. You must always do this, regardless of what the input is.
     """
