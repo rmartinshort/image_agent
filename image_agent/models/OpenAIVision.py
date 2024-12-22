@@ -24,9 +24,19 @@ class OpenAIVisionCaller:
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", self.system_prompt.system_template),
-                ("human", "{query}"),
+                (
+                    "user",
+                    [
+                        {"type": "text", "text": "{query}"},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": "data:image/jpeg;base64,{image_data}"},
+                        },
+                    ],
+                ),
             ]
         )
+
         chain = prompt | self.llm | StrOutputParser()
         return chain
 
@@ -34,9 +44,4 @@ class OpenAIVisionCaller:
         image = resize_maintain_aspect(image, standard_width)
         base64image = convert_PIL_to_base64(image)
 
-        human_msg = [
-            {"type": "image_url", "image_url": f"data:image/jpeg;base64,{base64image}"},
-            {"type": "text", "text": query},
-        ]
-
-        return self.chain.invoke({"query": human_msg})
+        return self.chain.invoke({"query": query, "image_data": base64image})
