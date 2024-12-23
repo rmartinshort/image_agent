@@ -20,8 +20,8 @@ class AgentNodes:
         planner: Any,
         structure: Any,
         assessment: Any,
-        florence_vision: Any,
-        qwen_vision: Any,
+        special_vision: Any,
+        general_vision: Any,
     ) -> None:
         """
         Initializes the AgentNodes with the specified models for planning, structuring, assessing, and vision.
@@ -36,8 +36,8 @@ class AgentNodes:
         self.llm_string: Any = planner
         self.llm_structure: Any = structure
         self.llm_assessment: Any = assessment
-        self.florence: Any = florence_vision
-        self.qwen: Any = qwen_vision
+        self.special_vision: Any = special_vision
+        self.general_vision: Any = general_vision
 
     def plan_node(self, state: dict) -> dict:
         """
@@ -132,7 +132,7 @@ class AgentNodes:
         if florence_text and len(florence_text) < 1:
             florence_text = None
 
-        florence_output = self.florence.call(
+        florence_output = self.special_vision.call(
             task_prompt=florence_mode,
             image=state.get("image_data"),
             text_input=florence_text,
@@ -155,7 +155,9 @@ class AgentNodes:
         qwen_input = json.loads(state.get("plan_structure"))[str(plan_stage)]
 
         qwen_text = qwen_input["tool_input"]
-        qwen_output = self.qwen.call(query=qwen_text, image=state.get("image_data"))
+        qwen_output = self.general_vision.call(
+            query=qwen_text, image=state.get("image_data")
+        )
         return {
             "plan_output": [{plan_stage: str(qwen_output)}],
         }
