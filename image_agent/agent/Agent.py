@@ -14,6 +14,15 @@ from langgraph.graph import StateGraph, END
 from langgraph.store.memory import InMemoryStore
 import uuid
 from typing import Any
+import logging
+
+
+logging.basicConfig(
+    format="%(name)s: %(asctime)s | %(levelname)s | %(filename)s:%(lineno)s | %(process)d >>> %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%SZ",
+)
+logger = logging.getLogger("Agent")
+logger.setLevel(logging.INFO)
 
 
 class Agent:
@@ -59,6 +68,8 @@ class Agent:
             system_prompt=ResultEvalutionPrompt,
             output_model=ResultAssessment,
         )
+
+        logger.info(f"General vision mode is {self.vision_mode}")
         if self.vision_mode == "local":
             self.general_vision: QwenCaller = QwenCaller()
         elif self.vision_mode == "gpt":
@@ -83,8 +94,8 @@ class Agent:
             planner=self.planner_llm,
             structure=self.plan_structure_llm,
             assessment=self.result_assessment_llm,
-            florence_vision=self.specialist_vision,
-            qwen_vision=self.general_vision,
+            special_vision=self.specialist_vision,
+            general_vision=self.general_vision,
         )
         edges: AgentEdges = AgentEdges()
 
@@ -175,6 +186,7 @@ class Agent:
                 stream_mode="updates",
             )
         ):
+            logger.info(f"At agent step {i}")
             self.display_components(update)
             memory_id: str = str(uuid.uuid4())
             self.store.put(namespace, memory_id, {"memory": update})

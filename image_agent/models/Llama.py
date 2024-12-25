@@ -102,8 +102,20 @@ class StructuredLlamaCaller(LlamaCaller):
             temperature (float): The sampling temperature for response generation.
             max_tokens (int): The maximum number of tokens to generate in a response.
         """
-        self.output_model: Any = output_model
-        self.chain: Any = self._set_up_chain()
+        self.system_prompt = system_prompt
+        self.output_model = output_model
+        self.loaded_model = MLXPipeline.from_model_id(
+            self.MODEL_PATH,
+            pipeline_kwargs={
+                "max_tokens": max_tokens,
+                "temp": temperature,
+                "do_sample": False,
+            },
+        )
+        self.llm = ChatMLX(llm=self.loaded_model)
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.chain = self._set_up_chain()
 
     def _set_up_chain(self) -> Any:
         """
